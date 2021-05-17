@@ -17,30 +17,25 @@ const Modal = {
   }
 }
 
+//Add local storage 
+const Storage = {
+  // get informations
+  get(){
+    // get the values in localStorage and make a 'parse' to an array or get an empty array
+   return JSON.parse(localStorage.getItem("dev.finances:transactions")) || []
+  },
+
+  // store datas using key and value
+  set(transactions){
+    //store all array transactions and turn them into strings
+    localStorage.setItem("dev.finances:transactions",
+    JSON.stringify(transactions))
+  }
+}
+
 //mathematical calculation
 const Transaction = {
-  all: [{
-
-      description: 'Wather',
-      amount: -50000,
-      date: '26/03/2021'
-    },
-    {
-      description: 'WebSite',
-      amount: 500000,
-      date: '26/03/2021'
-    },
-    {
-      description: 'Net',
-      amount: -20000,
-      date: '26/03/2021'
-    },
-    {
-      description: 'App',
-      amount: 200000,
-      date: '26/03/2021'
-    }
-  ],
+  all: Storage.get(),
 
   //Add trasactions
   add(transaction) {
@@ -51,7 +46,7 @@ const Transaction = {
 
   // remove transactions
   remove(index) {
-    Transaction.all.Splice(index, 1)
+    Transaction.all.splice(index, 1)
 
     App.reload()
   },
@@ -97,13 +92,14 @@ const DOM = {
   // With this function, I will receive values and store them in a specific index
   addTransaction(transaction, index) {
     const tr = document.createElement('tr') // Create a <tr>
-    tr.innerHTML = DOM.innerHTMLTransaction(transaction) //Receive the value of const html
+    tr.innerHTML = DOM.innerHTMLTransaction(transaction, index) //Receive the value of const html
+    tr.dataset.index = index
 
     DOM.transactionsContainer.appendChild(tr)
 
   },
 
-  innerHTMLTransaction(transaction) { //' Interpolação = `` ' insert data in HTML
+  innerHTMLTransaction(transaction, index) { //' Interpolação = `` ' insert data in HTML
     const CSSclass = transaction.amount > 0 ? "income" : "expense" //If amount is > than 0 then do 'income' if not do 'expense'
 
     const amount = Utils.formatCurrency(transaction.amount)
@@ -113,7 +109,7 @@ const DOM = {
       <td class="${CSSclass}"> ${amount}</td>
       <td class="date">${transaction.date}</td>
       <td>
-        <img src="./assets/minus.svg" alt="delete Transaction">
+        <img onclick="Transaction.remove(${index})" src="./assets/minus.svg" alt="delete Transaction">
       </td>
     `
     return html
@@ -141,7 +137,7 @@ const DOM = {
 const Utils = {
   //Format the amount
   formatAmount(value) {
-    value = Number(value) * 100
+    value = Number(value.replace(/\,\./g,"")) * 100
 
     return value
   },
@@ -150,9 +146,8 @@ const Utils = {
     const splittedDate = date.split("-") // Remove the - 
 
     //Define the form to show the date dd/mm/YYYY -> ex: 10/02/2021
-    return `${splittedDate[2]} /${splittedDate[1]}/${splittedDate[0]}}`
+    return `${splittedDate[2]}/${splittedDate[1]}/${splittedDate[0]}`
   },
-
 
   formatCurrency(value) {
     const signal = Number(value) < 0 ? '-' : ""
@@ -183,10 +178,6 @@ const Form = {
     }
   },
 
-  formatData() {
-
-  },
-
   validateFields() {
     const { //Take all values inserted in getValues
       description,
@@ -213,26 +204,38 @@ const Form = {
 
     date = Utils.formatDate(date)
 
+
+      return { 
+        description,
+        amount,
+        date
+      }
+  },
+
+  clearFields(){
+    Form.description.value = ""
+    Form.amount.value = ""
+    Form.date.value = ""
   },
 
   submit(event) {
     event.preventDefault()
 
     try {
+  
+      Form.validateFields()
+
       // Check if the informations are filled
-      //      Form.validateFields()
+      const transaction = Form.formatValues()
 
-      //Format all data to can save
-      Form.formatValues()
+      //save
+      Transaction.add(transaction)
 
-      //salvar
-
-
-      //apagar os dados do form
+      //clear all fields
+      Form.clearFields()
 
       //close modal
-
-      //Atualizar a aplicação
+      Modal.close()
 
     } catch (error) {
       alert(error.message)
@@ -246,12 +249,15 @@ const App = {
   // Initialize the app
   init() {
     //Call the object DOM and execute the function addTransaction 
-    Transaction.all.forEach(transaction => {
-      DOM.addTransaction(transaction)
-    })
+    // short way of writing the function below:  Transaction.all.forEach(DOM.addTransaction)
+    Transaction.all.forEach(DOM.addTransaction)
 
     DOM.updateBalance()
+
+    //set the values stored in the local storage
+    Storage.set(Transaction.all)
   },
+
   //Reload the app
   reload() {
     DOM.clearTransactions()

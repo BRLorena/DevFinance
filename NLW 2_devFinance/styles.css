@@ -269,7 +269,7 @@ input {
   border: none;
   border-radius:0.2rem;
 
-  padding:0.rem;
+  padding:0.8rem;
 
   width: 100%;
 }
@@ -278,7 +278,7 @@ input {
   margin-top:0.8rem;
 
 }
-.input-group small {
+.input-group .help {
   opacity: 0.4;
 }
 
