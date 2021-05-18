@@ -51,6 +51,13 @@ const Transaction = {
     App.reload()
   },
 
+  // edit an value
+  edit(index){
+    Transaction.all.
+
+    App.reload()
+  },
+
   incomes() { // Sum entries
     let income = 0;
 
@@ -109,6 +116,8 @@ const DOM = {
       <td class="${CSSclass}"> ${amount}</td>
       <td class="date">${transaction.date}</td>
       <td>
+      
+      <img onclick="Transaction.edit(${index})" src="./assets/Image.svg" alt="edit Transaction">
         <img onclick="Transaction.remove(${index})" src="./assets/minus.svg" alt="delete Transaction">
       </td>
     `
@@ -137,9 +146,8 @@ const DOM = {
 const Utils = {
   //Format the amount
   formatAmount(value) {
-    value = Number(value.replace(/\,\./g,"")) * 100
-
-    return value
+    value = value * 100
+    return Math.round(value)
   },
 
   formatDate(date) {
